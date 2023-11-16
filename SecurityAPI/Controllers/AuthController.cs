@@ -85,39 +85,52 @@ namespace SecurityAPI.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginVM model)
         {
-            var user = await _userManager.FindByNameAsync(model.Email);
 
-            if(user.EmailConfirmed == true)
+            try
             {
-                if (user != null && await _userManager.CheckPasswordAsync(user, model.Passname))
-                {
-                    var userRoles = await _userManager.GetRolesAsync(user);
 
-                    var authClaims = new List<Claim>
+                var user = await _userManager.FindByNameAsync(model.Email);
+
+                if (user.EmailConfirmed == true)
+                {
+                    if (user != null && await _userManager.CheckPasswordAsync(user, model.Passname))
+                    {
+                        var userRoles = await _userManager.GetRolesAsync(user);
+
+                        var authClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
 
-                    foreach (var userRole in userRoles)
-                    {
-                        authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+                        foreach (var userRole in userRoles)
+                        {
+                            authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+                        }
+
+                        var token = GetToken(authClaims);
+
+                        return Ok(new
+                        {
+                            token = new JwtSecurityTokenHandler().WriteToken(token),
+                            expiration = token.ValidTo
+                        });
                     }
 
-                    var token = GetToken(authClaims);
+                    return Unauthorized();
 
-                    return Ok(new
-                    {
-                        token = new JwtSecurityTokenHandler().WriteToken(token),
-                        expiration = token.ValidTo
-                    });
                 }
 
-                return Unauthorized();
+                return BadRequest("You cant login because email is not confirmed");
 
             }
+            catch (Exception)
+            {
 
-            return BadRequest("Email Not Confirmed");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while login in. Refresh page or contact support if the problem persists");
+
+            }
+           
            
         }
 
