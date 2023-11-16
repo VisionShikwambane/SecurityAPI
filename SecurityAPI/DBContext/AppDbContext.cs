@@ -19,6 +19,6 @@ namespace SecurityAPI.DBContext
             base.OnModelCreating(builder);
         }
 
-        public DbSet<TestingModel> Testing { get; set; }
+     
     }
 }
