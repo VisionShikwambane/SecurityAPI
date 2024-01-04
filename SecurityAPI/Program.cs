@@ -6,12 +6,16 @@ using System.Text;
 using SecurityAPI.DBContext;
 using SecurityAPI.Services;
 using SecurityAPI.Models;
+using SecurityAPI.Repositories;
+using DigiFiler_API.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
 
 
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<IRepository, BaseRepository>();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailService, EmailService>();
@@ -68,7 +72,7 @@ using(var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-    var roles = new[] { "Admin", "Client" };
+    var roles = new[] { "Admin", "Patient", "Doctor" };
 
     foreach (var role in roles)
     {

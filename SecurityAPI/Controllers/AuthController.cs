@@ -65,7 +65,7 @@ namespace SecurityAPI.Controllers
 
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, "Client");
+                    await _userManager.AddToRoleAsync(user, "Patient");
                     await SendConfirmEmailOTP(user.Email, "2234");
                 }
                 if (result.Errors.Any()) return StatusCode(StatusCodes.Status500InternalServerError, "Internal Server Error. Please contact support.");

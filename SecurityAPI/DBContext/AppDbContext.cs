@@ -19,6 +19,11 @@ namespace SecurityAPI.DBContext
             base.OnModelCreating(builder);
         }
 
-     
+        public DbSet<Doctor> Doctors { get; set; }
+        public DbSet<Admin> Admins { get; set; }
+        public DbSet<Patient> Patients { get; set; }
+        public DbSet<LiveAnnouncement> LiveAnnouncements { get; set; }
+
+
     }
 }
