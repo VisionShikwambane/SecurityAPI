@@ -119,8 +119,8 @@ namespace SecurityAPI.Controllers
         }
 
 
-        [HttpGet(" GetliveAnnoucemenById/{id}")]
-        public async Task<IActionResult> GetliveAnnoucemenById(int id)
+        [HttpGet("GetliveAnnoucemenById/{id}")]
+        public async Task<IActionResult> GetliveAnnoucementById(int id)
         {
             try
             {
@@ -134,6 +134,23 @@ namespace SecurityAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, "Error retrieving internal department");
+            }
+        }
+
+
+
+        [HttpGet]
+        [Route("GetAllCategories")]
+        public async Task<IActionResult> GetAllliveAnnoucements()
+        {
+            try
+            {
+                var results = await _repository.GetAllAsync<LiveAnnouncement>();
+                return Ok(results);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error. Please contact support.");
             }
         }
 
