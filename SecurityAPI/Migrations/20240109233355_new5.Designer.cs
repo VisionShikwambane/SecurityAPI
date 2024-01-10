@@ -12,8 +12,8 @@ using SecurityAPI.DBContext;
 namespace SecurityAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240103234457_New1")]
-    partial class New1
+    [Migration("20240109233355_new5")]
+    partial class new5
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -272,6 +272,23 @@ namespace SecurityAPI.Migrations
                     b.ToTable("Doctors");
                 });
 
+            modelBuilder.Entity("SecurityAPI.DataModels.LiveAnnouncement", b =>
+                {
+                    b.Property<int>("LiveAnnouncementID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LiveAnnouncementID"));
+
+                    b.Property<string>("AnnouncementsDetails")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("LiveAnnouncementID");
+
+                    b.ToTable("LiveAnnouncements");
+                });
+
             modelBuilder.Entity("SecurityAPI.DataModels.Patient", b =>
                 {
                     b.Property<int>("PatientID")
@@ -279,6 +296,9 @@ namespace SecurityAPI.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PatientID"));
+
+                    b.Property<string>("MedicalCondition")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserID")
                         .IsRequired()
@@ -289,6 +309,36 @@ namespace SecurityAPI.Migrations
                     b.HasIndex("UserID");
 
                     b.ToTable("Patients");
+                });
+
+            modelBuilder.Entity("SecurityAPI.DataModels.Slot", b =>
+                {
+                    b.Property<int>("SlotID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SlotID"));
+
+                    b.Property<int?>("DoctorID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("PatientID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SlotDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("SlotID");
+
+                    b.HasIndex("DoctorID");
+
+                    b.HasIndex("PatientID");
+
+                    b.ToTable("Slots");
                 });
 
             modelBuilder.Entity("SecurityAPI.DataModels.AppUser", b =>
@@ -399,6 +449,21 @@ namespace SecurityAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SecurityAPI.DataModels.Slot", b =>
+                {
+                    b.HasOne("SecurityAPI.DataModels.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorID");
+
+                    b.HasOne("SecurityAPI.DataModels.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientID");
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
                 });
 #pragma warning restore 612, 618
         }

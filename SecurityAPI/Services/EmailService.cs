@@ -27,7 +27,7 @@ namespace SecurityAPI.Services
             email.Body = builder.ToMessageBody();
 
             using var smtp = new SmtpClient();
-            smtp.Connect(emailSettings.Host, emailSettings.Port, SecureSocketOptions.StartTls);
+            smtp.Connect(emailSettings.Host, emailSettings.Port, false);
             smtp.Authenticate(emailSettings.Email, emailSettings.Password);
             await smtp.SendAsync(email);
             smtp.Disconnect(true);

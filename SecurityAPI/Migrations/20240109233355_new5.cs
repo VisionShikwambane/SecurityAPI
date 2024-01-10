@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SecurityAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class New1 : Migration
+    public partial class new5 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -54,6 +54,19 @@ namespace SecurityAPI.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LiveAnnouncements",
+                columns: table => new
+                {
+                    LiveAnnouncementID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AnnouncementsDetails = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LiveAnnouncements", x => x.LiveAnnouncementID);
                 });
 
             migrationBuilder.CreateTable(
@@ -207,6 +220,7 @@ namespace SecurityAPI.Migrations
                 {
                     PatientID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    MedicalCondition = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserID = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -218,6 +232,32 @@ namespace SecurityAPI.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Slots",
+                columns: table => new
+                {
+                    SlotID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SlotDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    PatientID = table.Column<int>(type: "int", nullable: true),
+                    DoctorID = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Slots", x => x.SlotID);
+                    table.ForeignKey(
+                        name: "FK_Slots_Doctors_DoctorID",
+                        column: x => x.DoctorID,
+                        principalTable: "Doctors",
+                        principalColumn: "DoctorID");
+                    table.ForeignKey(
+                        name: "FK_Slots_Patients_PatientID",
+                        column: x => x.PatientID,
+                        principalTable: "Patients",
+                        principalColumn: "PatientID");
                 });
 
             migrationBuilder.CreateIndex(
@@ -273,6 +313,16 @@ namespace SecurityAPI.Migrations
                 name: "IX_Patients_UserID",
                 table: "Patients",
                 column: "UserID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Slots_DoctorID",
+                table: "Slots",
+                column: "DoctorID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Slots_PatientID",
+                table: "Slots",
+                column: "PatientID");
         }
 
         /// <inheritdoc />
@@ -297,13 +347,19 @@ namespace SecurityAPI.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "LiveAnnouncements");
+
+            migrationBuilder.DropTable(
+                name: "Slots");
+
+            migrationBuilder.DropTable(
+                name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
                 name: "Doctors");
 
             migrationBuilder.DropTable(
                 name: "Patients");
-
-            migrationBuilder.DropTable(
-                name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

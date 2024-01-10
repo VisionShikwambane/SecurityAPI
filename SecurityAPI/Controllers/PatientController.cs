@@ -7,5 +7,7 @@ namespace SecurityAPI.Controllers
     [ApiController]
     public class PatientController : ControllerBase
     {
+
+
     }
 }
