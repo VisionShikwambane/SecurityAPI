@@ -128,7 +128,7 @@ namespace SecurityAPI.Controllers
         {
             try
             {
-                var results = _appDbContext.Slots.Where(a => a.IsActive == true);
+                var results =  _appDbContext.Slots.Where(a => a.IsActive == true);
                 return Ok(results);
             }
             catch (Exception)
