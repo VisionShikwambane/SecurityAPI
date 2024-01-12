@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SecurityAPI.DataModels;
@@ -7,6 +8,7 @@ using SecurityAPI.Models;
 using SecurityAPI.Repositories;
 using SecurityAPI.Services;
 using SecurityAPI.ViewModels;
+using System.Data;
 using System.Text.RegularExpressions;
 
 namespace SecurityAPI.Controllers
@@ -252,6 +254,91 @@ namespace SecurityAPI.Controllers
             response += $"<h2>Password: {password}</h2>";
             return response;
         }
+
+
+
+
+        [HttpPost]
+        [Route("AddBookingType")]
+        public async Task<ActionResult> AddBookingType(BookingType bk)
+        {
+            try
+            {
+                _repository.Add(bk);
+                await _repository.SaveChangesAsync();
+                return Ok(bk);
+
+            }
+            catch (Exception)
+            {
+
+                return StatusCode(500, "Internal Server Error. Please contact support.");
+            }
+        }
+
+        [HttpDelete]
+        [Route("DeleteBookingTypey/{id}")]
+        public async Task<ActionResult> DeleteBookingType(int id)
+        {
+            try
+            {
+                var bk = await _repository.GetByIdAsync<BookingType>(id);
+
+                if (bk == null)
+                    return NotFound();
+
+                _repository.Delete(bk);
+                await _repository.SaveChangesAsync();
+
+                return Ok();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+
+        [HttpPut("UpdateBookingType/{id}")]
+        public async Task<IActionResult> UpdateBookingType(int id, [FromBody] BookingType bk)
+        {
+            try
+            {
+                //var existingCategory = await _repository.GetByIdAsync<Category>(id);
+                var existingBk = _appDbContext.BookingTypes.Where(a => a.TypeID == id).FirstOrDefault();
+
+                if (existingBk == null)
+                {
+                    return NotFound();
+                }
+                _appDbContext.Attach(existingBk);
+                existingBk.Description = bk.Description;
+                await _appDbContext.SaveChangesAsync();
+                return Ok(bk);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error updating internal department");
+            }
+        }
+
+
+        [HttpGet]
+        [Route("GetAllBookingType")]
+        public async Task<IActionResult> GetAllBookingTyoes()
+        {
+            try
+            {
+                var results = await _repository.GetAllAsync<BookingType>();
+                return Ok(results);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error. Please contact support.");
+            }
+        }
+
 
 
     }

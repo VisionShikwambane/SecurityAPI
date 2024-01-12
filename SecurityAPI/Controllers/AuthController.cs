@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using SecurityAPI.DataModels;
+using SecurityAPI.DBContext;
 using SecurityAPI.Models;
+using SecurityAPI.Repositories;
 using SecurityAPI.Services;
 using SecurityAPI.ViewModels;
 using System.IdentityModel.Tokens.Jwt;
@@ -23,14 +25,18 @@ namespace SecurityAPI.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly IEmailService emailService;
+        private readonly AppDbContext _appDbContext;
+        private readonly IRepository _repository;
 
 
-        public AuthController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IEmailService service)
+        public AuthController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IEmailService service, AppDbContext appDbContext, IRepository repository)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
             this.emailService = service;
+            _appDbContext = appDbContext;
+            _repository = repository;
         }
 
 
@@ -58,15 +64,23 @@ namespace SecurityAPI.Controllers
                     Title = model.Title,
                     FirstName = model.Name,
                     LastName = model.Surname,
-                    EmailConfirmed = false
+                    EmailConfirmed = true
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
+                    var patient = new Patient
+                    {
+                        UserID = user.Id
+                    };
+
+                    _repository.Add(patient);
+                    await _repository.SaveChangesAsync();
                     await _userManager.AddToRoleAsync(user, "Patient");
                     await SendConfirmEmailOTP(user.Email, "2234");
+
                 }
                 if (result.Errors.Any()) return StatusCode(StatusCodes.Status500InternalServerError, "Internal Server Error. Please contact support.");
             }
@@ -86,53 +100,92 @@ namespace SecurityAPI.Controllers
         public async Task<IActionResult> Login([FromBody] LoginVM model)
         {
 
-            try
+            var user = await _userManager.FindByNameAsync(model.Email);
+
+            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-
-                var user = await _userManager.FindByNameAsync(model.Email);
-
-                if (user.EmailConfirmed == true)
+                try
                 {
-                    if (user != null && await _userManager.CheckPasswordAsync(user, model.Passname))
-                    {
-                        var userRoles = await _userManager.GetRolesAsync(user);
-
-                        var authClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                };
-
-                        foreach (var userRole in userRoles)
-                        {
-                            authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-                        }
-
-                        var token = GetToken(authClaims);
-
-                        return Ok(new
-                        {
-                            token = new JwtSecurityTokenHandler().WriteToken(token),
-                            expiration = token.ValidTo
-                        });
-                    }
-
-                    return Unauthorized();
-
+                    var token = GenerateJWTToken((AppUser)user);
+                    return Ok(new { token });
                 }
-
-                return BadRequest("You cant login because email is not confirmed");
-
+                catch (Exception ex)
+                {
+                    // Log the specific exception details for troubleshooting
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while generating the JWT token.");
+                }
             }
-            catch (Exception)
-            {
 
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while login in. Refresh page or contact support if the problem persists");
+            return Unauthorized("Invalid credentials");
 
-            }
-           
-           
+
         }
+
+      
+        private async Task<string> GenerateJWTToken(AppUser user)
+        {
+            var claims = await GetAllValidClaims(user);
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Tokens:Key"]));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(3),
+                SigningCredentials = credentials,
+                Issuer = _configuration["Tokens:Issuer"],
+                Audience = _configuration["Tokens:Audience"]
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+        }
+
+
+
+
+
+
+        private async Task<List<Claim>> GetAllValidClaims(AppUser user)
+        {
+            var _options = new IdentityOptions();
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim("FirstName", user.FirstName),
+                new Claim("LastName", user.LastName),
+
+            };
+
+            //Getting claims that we have assigned to the user
+            var userClaims = await _userManager.GetClaimsAsync(user);
+            claims.AddRange(userClaims);
+
+            //Get user role and add it to claims
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            foreach (var userRole in userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, userRole));
+                var role = await _roleManager.FindByNameAsync(userRole);
+
+                if (role != null)
+                {
+                    var roleClaims = await _roleManager.GetClaimsAsync(role);
+                    foreach (var roleClaim in roleClaims)
+                    {
+                        claims.Add(roleClaim);
+                    }
+                }
+            }
+
+            return claims;
+        }
+
 
 
 
@@ -159,8 +212,8 @@ namespace SecurityAPI.Controllers
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Tokens:Key"]));
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["JWT:ValidIssuer"],
-                audience: _configuration["JWT:ValidAudience"],
+                issuer: _configuration["Tokens:Issuer"],
+                audience: _configuration["Tokens:Audience"],
                 expires: DateTime.Now.AddHours(3),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)

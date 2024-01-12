@@ -14,6 +14,8 @@ namespace SecurityAPI.DataModels
       
         public DateTime Date { get; set; }
 
+        public bool IsExpired { get; set; }
+
         [ForeignKey("PatientID")]
         public int? PatientID { get; set; }
 
