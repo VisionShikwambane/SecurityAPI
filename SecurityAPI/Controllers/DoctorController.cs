@@ -115,7 +115,7 @@ namespace SecurityAPI.Controllers
                 await _appDbContext.SaveChangesAsync();
                 return Ok(Slt);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, "Error updating internal department");
             }
@@ -125,7 +125,7 @@ namespace SecurityAPI.Controllers
 
         [HttpGet]
         [Route("GetAllSlots")]
-        public async Task<IActionResult> GetAllSlots()
+        public IActionResult GetAllSlots()
         {
             try
             {
