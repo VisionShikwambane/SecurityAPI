@@ -40,19 +40,20 @@ namespace SecurityAPI.Controllers
         {
             try
             {
-               // var user = await _userManager.GetUserAsync(User);
-               // var doctor = await _appDbContext.Doctors.Include(e => e.User).FirstOrDefaultAsync(e => e.User!.Id == user.Id);
+                // var user = await _userManager.GetUserAsync(User);
+                // var doctor = await _appDbContext.Doctors.Include(e => e.User).FirstOrDefaultAsync(e => e.User!.Id == user.Id);
 
-               /* if(doctor == null)
-                {
-                    return NotFound("");
-                }*/
+                /* if(doctor == null)
+                 {
+                     return NotFound("");
+                 }*/
 
-                var slot1 = new Slot
+                var slot1 = new DrConsultationSlot
                 {
-                    
-                    SlotDescription = slot.SlotDescription,
+
+                    SlotDate = slot.SlotDate,
                     IsActive = true,
+                    DoctorID = 1
                     // DoctorID = doctor.DoctorID,
                    
                     
@@ -78,7 +79,7 @@ namespace SecurityAPI.Controllers
         {
             try
             {
-                var slot = await _repository.GetByIdAsync<Slot>(id);
+                var slot = await _repository.GetByIdAsync<DrConsultationSlot>(id);
 
                 if (slot == null)
                     return NotFound();
@@ -110,7 +111,7 @@ namespace SecurityAPI.Controllers
                     return NotFound();
                 }
                 _appDbContext.Attach(existingSlt);
-                existingSlt.SlotDescription = Slt.SlotDescription;
+                existingSlt.SlotDate = Slt.SlotDate;
                 await _appDbContext.SaveChangesAsync();
                 return Ok(Slt);
             }
@@ -136,6 +137,29 @@ namespace SecurityAPI.Controllers
                 return StatusCode(500, "Internal Server Error. Please contact support.");
             }
         }
+
+
+
+
+
+        [HttpGet]
+        [Route("GetPatientDetails/{id}")]
+        public IActionResult GetPatientDetails(int id)
+        {
+            try
+            {
+                var patientDetails = _appDbContext.Patients.Include(a => a.User).Where(p => p.PatientID == id).FirstOrDefault();
+                return Ok(patientDetails);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error. Please contact support.");
+            }
+        }
+
+
+
+
 
 
 

@@ -23,7 +23,7 @@ namespace SecurityAPI.DBContext
         public DbSet<Admin> Admins { get; set; }
         public DbSet<Patient> Patients { get; set; }
         public DbSet<LiveAnnouncement> LiveAnnouncements { get; set; }
-        public DbSet<Slot> Slots { get; set; }
+        public DbSet<DrConsultationSlot> Slots { get; set; }
 
         public DbSet<Booking> Bookings { get; set; }
 

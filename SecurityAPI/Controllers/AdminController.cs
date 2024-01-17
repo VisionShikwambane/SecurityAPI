@@ -210,7 +210,8 @@ namespace SecurityAPI.Controllers
 
         private string GenerateRandomPassword()
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+=-";
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+            string just = "0123456789!@#$%^&*()_+=-";
 
             // You can adjust the length of the password as needed
             int length = 6;

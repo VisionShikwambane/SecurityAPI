@@ -2,6 +2,6 @@
 {
     public class AddSlotVM
     {
-        public string SlotDescription { get; set; }
+        public DateTime SlotDate { get; set; }
     }
 }

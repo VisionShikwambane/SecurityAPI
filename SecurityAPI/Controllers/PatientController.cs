@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SecurityAPI.DataModels;
 using SecurityAPI.DBContext;
+using SecurityAPI.Models;
 using SecurityAPI.Repositories;
 using SecurityAPI.Services;
 using SecurityAPI.ViewModels;
@@ -113,7 +114,15 @@ namespace SecurityAPI.Controllers
         {
             try
             {
-                var results = _appDbContext.Bookings.Where(a => a.IsExpired == false);
+                var user = await _userManager.GetUserAsync(User);
+                var patient = await _appDbContext.Patients.Include(e => e.User).FirstOrDefaultAsync(e => e.User!.Id == user.Id);
+
+                if (patient == null)
+                {
+                    return NotFound("Patient not found");
+                }
+
+                var results = _appDbContext.Bookings.Where(a => a.IsExpired == false && a.PatientID == patient.PatientID);
                 return Ok(results);
             }
             catch (Exception)
@@ -122,6 +131,106 @@ namespace SecurityAPI.Controllers
             }
         }
 
+
+
+
+        [HttpPut]
+        [Route("BookConsultationWithDoctor/{SlodID}")]
+        public async Task<ActionResult> BookConsultationWithDoctor(int SlodID)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                var patient = await _appDbContext.Patients.Include(e => e.User).FirstOrDefaultAsync(e => e.User!.Id == user.Id);
+
+                if (patient == null)
+                {
+                    return NotFound("Patient Not Found");
+                }
+
+                var ChosenSlot = _appDbContext.Slots.Where(s=>s.SlotID == SlodID && s.IsActive == true  ).FirstOrDefault();
+
+                if(ChosenSlot.PatientID != null)
+                {
+                    return BadRequest("This Slot has already been taken");
+                }
+
+                else
+                {
+                    _appDbContext.Attach(ChosenSlot);
+                    ChosenSlot.PatientID = patient.PatientID;
+                    _appDbContext.SaveChanges();
+                    return Ok("Consulation made, you will be notified when the Doctor Approves the Consultation");
+                }
+
+              
+            }
+            catch (Exception)
+            {
+
+                return StatusCode(500, "Internal Server Error. Please contact support.");
+            }
+        }
+
+
+
+        private async Task<IActionResult> SendConfirmEmailOTP(string receiver, string code)
+        {
+            try
+            {
+                Mailrequest mailrequest = new Mailrequest();
+                mailrequest.ToEmail = receiver;
+                mailrequest.Subject = "Once Off OPT ";
+                mailrequest.Body = GetHtmlcontent(code);
+                await emailService.SendEmailAsync(mailrequest);
+
+                return Ok();
+
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+
+        private string GetHtmlcontent(string code)
+        {
+            string response = "<p>The code expires in 5 minutes</p>";
+            response += $"<h2>{code}</h2>";
+            return response;
+        }
+
+
+
+
+
+
+        [HttpPut("CancelConsulationBooking/{id}")]
+        public async Task<IActionResult> CancelConsulationBooking (int id)
+        {
+            try
+            {
+
+                var user = await _userManager.GetUserAsync(User);
+                var patient = await _appDbContext.Patients.Include(e => e.User).FirstOrDefaultAsync(e => e.User!.Id == user.Id);
+
+                var existingSlt = _appDbContext.Slots.Where(a => a.SlotID == id).FirstOrDefault();
+
+                if (existingSlt == null)
+                {
+                    return NotFound();
+                }
+                _appDbContext.Attach(existingSlt);
+                existingSlt.PatientID = null;
+                await _appDbContext.SaveChangesAsync();
+                return Ok("Consultation Cancelled");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error updating internal department");
+            }
+        }
 
 
 
