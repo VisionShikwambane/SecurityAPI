@@ -140,6 +140,7 @@ namespace SecurityAPI.Controllers
             try
             {
                 var user = await _userManager.GetUserAsync(User);
+
                 var patient = await _appDbContext.Patients.Include(e => e.User).FirstOrDefaultAsync(e => e.User!.Id == user.Id);
 
                 if (patient == null)
@@ -159,6 +160,7 @@ namespace SecurityAPI.Controllers
                     PhoneNumber = patient.User.PhoneNumber,
                     ProfilePic = patient.User.ProfilePicture,
                     Title = patient.User.Title,
+    
                 };
 
                 return Ok(patientVM);
