@@ -133,6 +133,44 @@ namespace SecurityAPI.Controllers
 
 
 
+        [HttpGet]
+        [Route("GetPatientProfile")]
+        public async Task<IActionResult> GetPatientProfile()
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                var patient = await _appDbContext.Patients.Include(e => e.User).FirstOrDefaultAsync(e => e.User!.Id == user.Id);
+
+                if (patient == null)
+                {
+                    return NotFound("Patient not found");
+                }
+
+
+                var patientVM = new PatientProfileVM
+                {
+
+                    Name = patient.User.FirstName,
+                    Surname = patient.User.LastName,
+                    Email = patient.User.Email,
+                    Interests = patient.Interests,
+                    MedicalCondition = patient.MedicalCondition,
+                    PhoneNumber = patient.User.PhoneNumber,
+                    ProfilePic = patient.User.ProfilePicture,
+                    Title = patient.User.Title,
+                };
+
+                return Ok(patientVM);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error. Please contact support.");
+            }
+        }
+
+
+
 
         [HttpPut]
         [Route("BookConsultationWithDoctor/{SlodID}")]

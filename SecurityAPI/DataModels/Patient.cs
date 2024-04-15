@@ -10,6 +10,8 @@ namespace SecurityAPI.DataModels
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int PatientID { get; set; }
         public string? MedicalCondition { get; set; } = string.Empty;
+        public string? Interests { get; set; } = string.Empty;
+        public DateTime DateJoined { get; set; }
 
         [ForeignKey("AppUser")]
         public string UserID { get; set; } = string.Empty;
