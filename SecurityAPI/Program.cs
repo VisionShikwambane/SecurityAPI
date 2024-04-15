@@ -9,13 +9,24 @@ using SecurityAPI.Models;
 using SecurityAPI.Repositories;
 using DigiFiler_API.Repositories;
 using Microsoft.OpenApi.Models;
-using SecurityAPI.DataModels;
+using Microsoft.AspNetCore.Cors;
+
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
 
 
 builder.Services.AddControllers();
+
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+{
+    policy.AllowAnyHeader();
+    policy.AllowAnyMethod();
+    policy.AllowAnyOrigin();
+  
+}));
+
+
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -111,12 +122,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAnyOrigin");
 app.UseAuthorization();
 app.UseAuthentication();
 app.MapControllers();
+app.UseCors();
 
-using(var scope = app.Services.CreateScope())
+using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
