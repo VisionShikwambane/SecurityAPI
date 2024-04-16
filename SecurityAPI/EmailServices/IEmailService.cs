@@ -10,5 +10,6 @@ namespace SecurityAPI.Services
 
     {
         Task SendEmailAsync(Mailrequest mailrequest);
+        Task SendEmail(string receiver, string? code, string htmlContent, string subject);
     }
 }

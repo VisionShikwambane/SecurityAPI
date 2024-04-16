@@ -40,27 +40,8 @@ namespace SecurityAPI.Controllers
         {
             try
             {
-                // var user = await _userManager.GetUserAsync(User);
-                // var doctor = await _appDbContext.Doctors.Include(e => e.User).FirstOrDefaultAsync(e => e.User!.Id == user.Id);
-
-                /* if(doctor == null)
-                 {
-                     return NotFound("");
-                 }*/
-
-                var slot1 = new DrConsultationSlot
-                {
-
-                    SlotDate = slot.SlotDate,
-                    IsActive = true,
-                    DoctorID = 1
-                    // DoctorID = doctor.DoctorID,
-                   
-                    
-                    
-                };
-
-                _repository.Add(slot1);
+               
+                _repository.Add(slot);
                 await _repository.SaveChangesAsync();
                 return Ok("Slot Created Successfully");
 
@@ -103,16 +84,15 @@ namespace SecurityAPI.Controllers
         {
             try
             {
-                //var existingCategory = await _repository.GetByIdAsync<Category>(id);
                 var existingSlt = _appDbContext.Slots.Where(a => a.SlotID == id).FirstOrDefault();
 
                 if (existingSlt == null)
                 {
                     return NotFound();
                 }
-                _appDbContext.Attach(existingSlt);
+                _repository.Attach(existingSlt);
                 existingSlt.SlotDate = Slt.SlotDate;
-                await _appDbContext.SaveChangesAsync();
+                await _repository.SaveChangesAsync();
                 return Ok(Slt);
             }
             catch (Exception)

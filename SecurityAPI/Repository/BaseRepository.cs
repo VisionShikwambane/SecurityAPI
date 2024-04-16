@@ -3,6 +3,8 @@ using SecurityAPI.DBContext;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Principal;
+using System;
 
 namespace DigiFiler_API.Repositories
 {
@@ -14,6 +16,9 @@ namespace DigiFiler_API.Repositories
         {
             _appDbContext = appDbContext;
         }
+
+
+
 
 
         public void Add<T>(T entity) where T : class
@@ -49,9 +54,34 @@ namespace DigiFiler_API.Repositories
             return await _appDbContext.Set<T>().FindAsync(id);
         }
 
-        public async void Attach<T>(T entity) where T : class
+
+        public void Attach<T>(T entity) where T : class
         {
             _appDbContext.Attach(entity);
         }
+
+
+        public virtual void AddRange<T>(IEnumerable<T> entities) where T : class
+        {
+            _appDbContext.Set<T>().AddRange(entities);
+        }
+
+
+        public virtual void DeleteRange<T>(IEnumerable<T> entities) where T : class
+        {
+            _appDbContext.Set<T>().RemoveRange(entities);
+        }
+
+
+        public virtual void UpdaterRange<T>(ICollection<T> entities) where T : class
+        {
+            foreach (var entity in entities)
+            {
+                Update(entity);
+            }
+
+        }
+
+
     }
 }

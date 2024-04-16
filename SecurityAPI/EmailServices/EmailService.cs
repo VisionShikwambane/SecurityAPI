@@ -4,6 +4,7 @@ using MimeKit;
 using MailKit.Net.Smtp;
 using SecurityAPI.Models;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Mvc;
 
 namespace SecurityAPI.Services
 {
@@ -15,6 +16,32 @@ namespace SecurityAPI.Services
         {
             this.emailSettings = options.Value;
         }
+
+
+
+        public async Task SendEmail(string receiver, string? code, string htmlContent, string subject)
+        {
+            try
+            {
+                Mailrequest mailrequest = new Mailrequest
+                {
+                    ToEmail = receiver,
+                    Subject = subject,
+                    Body = GetHtmlcontent(code, htmlContent)
+                };
+
+                await SendEmailAsync(mailrequest);
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
+
+
 
         public async Task SendEmailAsync(Mailrequest mailrequest)
         {
@@ -32,6 +59,21 @@ namespace SecurityAPI.Services
             await smtp.SendAsync(email);
             smtp.Disconnect(true);
         }
+
+
+
+
+        private static string GetHtmlcontent(string code, string htmlContent)
+        {
+            string response = $"<p>{htmlContent}</p>";
+            response += $"<h2>{code}</h2>";
+            return response;
+        }
+
+
+
+
+
 
 
 

@@ -79,7 +79,7 @@ namespace SecurityAPI.Controllers
                     _repository.Add(patient);
                     await _repository.SaveChangesAsync();
                     await _userManager.AddToRoleAsync(user, "Patient");
-                    await SendConfirmEmailOTP(user.Email, "2234");
+                    await emailService.SendEmail(user.Email, null, "Hi mina Visitlhe on Waka Shikwambane, Ni Tsama ka mokgwathi, ni komebale buswa na nyama kwalan tlhe, maniTWA NUH vamani na va bava, vona endlani so, mitlhe mi endla so ", "Welcome to the App");
 
                 }
                 if (result.Errors.Any()) return StatusCode(StatusCodes.Status500InternalServerError, "Internal Server Error. Please contact support.");
@@ -121,7 +121,34 @@ namespace SecurityAPI.Controllers
 
         }
 
-      
+
+        [HttpPost]
+        [Route("FastLoginForTesting")]
+        public async Task<IActionResult> FastLoginForTesting()
+        {
+
+            var user = await _userManager.FindByNameAsync("visionvee201@gmail.com");
+
+            if (user != null && await _userManager.CheckPasswordAsync(user, "Tintswalo@19"))
+            {
+                try
+                {
+                    var token = GenerateJWTToken((AppUser)user);
+                    return Ok(new { token });
+                }
+                catch (Exception ex)
+                {
+                    // Log the specific exception details for troubleshooting
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while generating the JWT token.");
+                }
+            }
+
+            return Unauthorized("Invalid credentials");
+
+
+        }
+
+
         private async Task<string> GenerateJWTToken(AppUser user)
         {
             var claims = await GetAllValidClaims(user);
@@ -192,16 +219,6 @@ namespace SecurityAPI.Controllers
 
 
 
-        [HttpPost]
-        [Route("ConfirmEmail")]
-        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailVM model)
-        {
-
-            return Ok();
-
-        }
-
-
 
 
 
@@ -226,36 +243,10 @@ namespace SecurityAPI.Controllers
 
 
 
-        private async Task<IActionResult> SendConfirmEmailOTP(string receiver, string code)
-        {
-            try
-            {
-                Mailrequest mailrequest = new Mailrequest();
-                mailrequest.ToEmail = receiver;
-                mailrequest.Subject = "Once Off OPT ";
-                mailrequest.Body = GetHtmlcontent(code);
-                await emailService.SendEmailAsync(mailrequest);
-
-                return Ok();
-
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
 
 
 
 
-
-
-        private string GetHtmlcontent(string code)
-        {
-            string response = "<p>The code expires in 5 minutes</p>";
-            response += $"<h2>{code}</h2>";
-            return response;
-        }
 
 
     }

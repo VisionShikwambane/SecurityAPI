@@ -9,7 +9,6 @@ using SecurityAPI.Models;
 using SecurityAPI.Repositories;
 using DigiFiler_API.Repositories;
 using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Cors;
 
 
 var builder = WebApplication.CreateBuilder(args);

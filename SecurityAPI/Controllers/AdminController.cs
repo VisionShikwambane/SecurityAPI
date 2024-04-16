@@ -65,6 +65,7 @@ namespace SecurityAPI.Controllers
                 string randomPassword = GenerateRandomPassword();
 
                 var result = await _userManager.CreateAsync(user, randomPassword);
+               
 
                 if (result.Succeeded)
                 {
@@ -75,19 +76,15 @@ namespace SecurityAPI.Controllers
                     {
                         UserID = user.Id,
                         DoctorType = model.DocType
-  
                     };
 
-                    _appDbContext.Add(doctor);
-                    _appDbContext.SaveChanges();
+                    _repository.Add(doctor);
+                    await _repository.SaveChangesAsync();
 
                     if(doctor!= null)
                     {
                        await SendWelcomeEmail(user.Email, randomPassword);
                     }
-
-
-                    // await SendConfirmEmailOTP(user.Email, "2234");
                 }
                 if (result.Errors.Any()) return StatusCode(StatusCodes.Status500InternalServerError, "Internal Server Error. Please contact support.");
             }
@@ -158,6 +155,7 @@ namespace SecurityAPI.Controllers
 
 
 
+
         [HttpDelete]
         [Route("DeleteliveAnnouncement/{id}")]
         public async Task<ActionResult> DeleteliveAnnouncement(int id)
@@ -188,9 +186,7 @@ namespace SecurityAPI.Controllers
         {
             try
             {
-                //var existingCategory = await _repository.GetByIdAsync<Category>(id);
-                var existingla = _appDbContext.LiveAnnouncements.Where(a => a.LiveAnnouncementID == id).FirstOrDefault();
-
+                var existingla = await _repository.GetByIdAsync<LiveAnnouncement>(id);
                 if (existingla == null)
                 {
                     return NotFound();

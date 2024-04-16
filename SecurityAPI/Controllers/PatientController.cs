@@ -41,35 +41,24 @@ namespace SecurityAPI.Controllers
         {
             try
             {
-                 var user = await _userManager.GetUserAsync(User);
-                 var patient = await _appDbContext.Patients.Include(e => e.User).FirstOrDefaultAsync(e => e.User!.Id == user.Id);
+                var user = await _userManager.GetUserAsync(User);
+                var patient = await _appDbContext.Patients.Include(e => e.User).FirstOrDefaultAsync(e => e.User!.Id == user.Id);
 
                  if(patient == null)
                  {
                      return NotFound("Patient Not Found");
                  }
-
                 var ExistingBooking = _appDbContext.Bookings.Where(e => e.PatientID == patient.PatientID && e.BookingTypeID == booking.BookingTypeID).FirstOrDefault();
-
-                if(ExistingBooking != null)
+                if (ExistingBooking != null)
                 {
                     return BadRequest("You already made this type of booking");
                 }
                 else
                 {
-
-                    var bk = new Booking
-                    {
-                        BookingTypeID = booking.BookingTypeID,
-                        Date = booking.Date,
-                        PatientID = patient.PatientID,
-                        IsExpired = false
-                    };
-
-                    _repository.Add(bk);
-                    await _repository.SaveChangesAsync();
-
-                    return Ok("Booking Created Successfully");
+                   booking.PatientID = patient.PatientID;
+                   _repository.Add(booking);
+                   await _repository.SaveChangesAsync();
+                   return Ok("Booking Created Successfully");
                 }
 
 
